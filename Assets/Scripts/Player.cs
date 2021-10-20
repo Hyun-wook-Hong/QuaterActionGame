@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Player script.
+// Player script
 
 public class Player : MonoBehaviour
 {
