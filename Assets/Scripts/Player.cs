@@ -7,13 +7,22 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     public float speed;
+    public GameObject[] weapons;
+    public bool[] hasWeapons;
     float hAxis;
     float vAxis;
     bool wDown;
     bool jDown;
+    bool iDown;
+
+    //weapon swap
+    bool sDown1;
+    bool sDown2;
+    bool sDown3;
 
     bool isJump;
     bool isDodge;
+    bool isSwap;
 
     Rigidbody rigid;
     Vector3 moveVec;
@@ -21,6 +30,10 @@ public class Player : MonoBehaviour
 
 
     Animator anim;
+
+    GameObject nearObject;
+    GameObject equipWeapon;
+    int equipWeaponIndex = -1;
 
     // Start is called before the first frame update
     // 플레이어가 생성되자마자 초기화
@@ -43,6 +56,9 @@ public class Player : MonoBehaviour
         Jump();
         // 회피기능
         Dodge();
+        // 떨어진 아이템과 상호작용
+        Interaction();
+        Swap();
     }
 
     void GetInput(){
@@ -50,6 +66,10 @@ public class Player : MonoBehaviour
         vAxis = Input.GetAxisRaw("Vertical");
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");
+        iDown = Input.GetButtonDown("Interaction");
+        sDown1 = Input.GetButtonDown("Swap1");
+        sDown2 = Input.GetButtonDown("Swap2");
+        sDown3 = Input.GetButtonDown("Swap3");
     }
 
     void Move(){
@@ -63,6 +83,8 @@ public class Player : MonoBehaviour
         if(isDodge)
             moveVec = dodgeVec;
         
+        if(isSwap)
+            moveVec = Vector3.zero;
 
         transform.position += moveVec * speed * (wDown ? 0.3f : 1f) * Time.deltaTime;
 
@@ -76,7 +98,7 @@ public class Player : MonoBehaviour
     }
 
     void Jump(){
-        if(jDown && moveVec == Vector3.zero && !isJump && !isDodge){
+        if(jDown && moveVec == Vector3.zero && !isJump && !isDodge && !isSwap){
             // AddForce: 물리적인 힘 가하기
             rigid.AddForce(Vector3.up * 15, ForceMode.Impulse);
             anim.SetBool("isJump", true);
@@ -85,7 +107,7 @@ public class Player : MonoBehaviour
         }
     }
     void Dodge(){
-        if(jDown && moveVec != Vector3.zero && !isJump && !isDodge){
+        if(jDown && moveVec != Vector3.zero && !isJump && !isDodge && !isSwap){
             dodgeVec = moveVec;
             // 회피는 이동속도의 2배
             speed *= 2;
@@ -101,11 +123,76 @@ public class Player : MonoBehaviour
         isDodge = false;
     }
 
+    void Swap(){
+
+        // 입수하지 않은 무기에 대해 swap 시도하는 경우 예외 case
+        if(sDown1 && (!hasWeapons[0] || equipWeaponIndex == 0))
+            return;
+        if(sDown2 && (!hasWeapons[1] || equipWeaponIndex == 1))
+            return;
+        if(sDown3 && (!hasWeapons[2] || equipWeaponIndex == 2))
+            return;
+
+
+        int weaponIndex = -1;
+        if (sDown1) weaponIndex = 0;
+        if (sDown2) weaponIndex = 1;
+        if (sDown3) weaponIndex = 2;
+
+        if((sDown1 || sDown2 || sDown3) && !isJump && !isDodge)
+        {
+            // 빈손인 경우 예외 case
+            if (equipWeapon != null)
+                equipWeapon.SetActive(false);
+
+            equipWeaponIndex = weaponIndex;
+            equipWeapon = weapons[weaponIndex];
+            equipWeapon.SetActive(true);
+
+            anim.SetTrigger("doSwap");
+
+            isSwap = true;
+
+            Invoke("SwapOut", 0.5f);   
+        }    
+
+    }
+    
+    void SwapOut(){
+        isSwap = false;
+    }
+
+    void Interaction(){
+        if(iDown && nearObject != null && !isJump && !isDodge){
+            if(nearObject.tag == "Weapon"){
+                Item item = nearObject.GetComponent<Item>();
+                int weaponIndex = item.value;
+                hasWeapons[weaponIndex] = true;
+
+                Destroy(nearObject);
+            }
+        }
+
+    }
+
     // 바닥에 착지하는 순간
     void OnCollisionEnter(Collision collision) {
         if(collision.gameObject.tag == "Floor"){
             anim.SetBool("isJump", false);
             isJump = false;
+        }
+    }
+
+    // 아이템 입수
+    private void OnTriggerStay(Collider other) {
+        if(other.tag == "Weapon")
+            nearObject = other.gameObject;
+        
+        Debug.Log(nearObject);
+    }
+    private void OnTriggerExit(Collider other) {
+        if(other.tag == "Weapon"){
+            nearObject = null;
         }
     }
 }
