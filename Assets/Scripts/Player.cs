@@ -9,8 +9,24 @@ public class Player : MonoBehaviour
     public float speed;
     public GameObject[] weapons;
     public bool[] hasWeapons;
+    // 수류탄: 필살기 - 공전물체로 보여주기 위해 배열 생성
+    public GameObject[] grenades;
+    public int hasGrenades;
+
+    /* 현재 총알, 코인, 체력, 수류탄 보유갯수 */
+    public int ammo;
+    public int coin;
+    public int health;
+
+    /* 최대 총알, 코인, 체력, 수류탄 보유갯수 */
+    public int maxAmmo;
+    public int maxCoin;
+    public int maxHealth;
+    public int maxHasGrenades;
+
     float hAxis;
     float vAxis;
+
     bool wDown;
     bool jDown;
     bool iDown;
@@ -183,14 +199,52 @@ public class Player : MonoBehaviour
         }
     }
 
-    // 아이템 입수
-    private void OnTriggerStay(Collider other) {
+    // 총알, 코인, 체력, 수류탄 아이템 입수 (OnTriggerEnter 사용)
+    void OnTriggerEnter(Collider other) {
+        if(other.tag == "Item"){
+            Item item = other.GetComponent<Item>();
+            switch(item.type){
+                case Item.Type.Ammo:
+                    ammo += item.value;
+                    // 입수 시 수치를 더했을때 최댓값을 넘는 수치가 된다면 최댓값으로 고정
+                    if(ammo > maxAmmo)
+                        ammo = maxAmmo;
+                    break;
+                case Item.Type.Coin:
+                    coin += item.value;
+                    // 입수 시 수치를 더했을때 최댓값을 넘는 수치가 된다면 최댓값으로 고정
+                    if(coin > maxCoin)
+                        coin = maxCoin;
+                    break;
+                case Item.Type.Heart:
+                    health += item.value;
+                    // 입수 시 수치를 더했을때 최댓값을 넘는 수치가 된다면 최댓값으로 고정
+                    if(health > maxHealth)
+                        health = maxHealth;
+                    break;
+                case Item.Type.Grenade:
+                    // 이미 max일 경우 더이상 입수 이벤트 로직 발동할 필요 없음
+                    if(hasGrenades == maxHasGrenades)
+                        return;
+                    grenades[hasGrenades].SetActive(true);
+                    hasGrenades += item.value;
+                    // 입수 시 수치를 더했을때 최댓값을 넘는 수치가 된다면 최댓값으로 고정
+                    if(hasGrenades > maxHasGrenades)
+                        hasGrenades = maxHasGrenades;
+                    break;
+            }
+            Destroy(other.gameObject);
+        }
+    }
+
+    // 무기 아이템 입수, 입수 시 필드에 있는 아이템 오브젝트 없애기
+    void OnTriggerStay(Collider other) {
         if(other.tag == "Weapon")
             nearObject = other.gameObject;
         
         Debug.Log(nearObject);
     }
-    private void OnTriggerExit(Collider other) {
+    void OnTriggerExit(Collider other) {
         if(other.tag == "Weapon"){
             nearObject = null;
         }
