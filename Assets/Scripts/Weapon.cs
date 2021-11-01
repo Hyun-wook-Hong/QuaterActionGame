@@ -59,7 +59,7 @@ public class Weapon : MonoBehaviour
         //yield break; // 코루틴 탈출 가능
 
         // 1
-        yield return new WaitForSeconds(0.1f); // 0.1초 대기
+        yield return new WaitForSeconds(0.3f); // 0.1초 대기
         meleeArea.enabled   = true;
         trailEffect.enabled = true;
 

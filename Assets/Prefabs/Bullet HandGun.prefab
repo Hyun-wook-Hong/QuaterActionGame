@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 3366283986084331348}
   - component: {fileID: 4156364997898054050}
   - component: {fileID: 3259879534449913606}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Bullet HandGun
-  m_TagString: Untagged
+  m_TagString: Bullet
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -165,7 +165,7 @@ SphereCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8627271046836599260}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.3

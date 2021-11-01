@@ -44,6 +44,7 @@ public class Player : MonoBehaviour
     bool isSwap;
     bool isReload;
     bool isFireReady = true;
+    bool isBorder;
 
     Rigidbody rigid;
     Vector3 moveVec;
@@ -111,10 +112,11 @@ public class Player : MonoBehaviour
         if(isDodge)
             moveVec = dodgeVec;
         
-        if(isSwap || /*isReload ||*/ !isFireReady)
+        if(isSwap || isReload || !isFireReady)
             moveVec = Vector3.zero;
-
-        transform.position += moveVec * speed * (wDown ? 0.3f : 1f) * Time.deltaTime;
+        // 감지한 장애물이 벽이 아닌 경우에만 이동 (관통방지)
+        if(!isBorder)
+            transform.position += moveVec * speed * (wDown ? 0.3f : 1f) * Time.deltaTime;
 
         anim.SetBool("isRun", moveVec != Vector3.zero);
         anim.SetBool("isWalk", wDown);
@@ -255,6 +257,22 @@ public class Player : MonoBehaviour
             }
         }
 
+    }
+    // 플레이어 자동회전 방지
+    void FreezeRotation(){
+        rigid.angularVelocity = Vector3.zero;
+    }
+
+    // 플레이어 벽 관통 방지
+    void StopToWall(){
+        Debug.DrawRay(transform.position, transform.forward * 5, Color.green);
+        isBorder = Physics.Raycast(transform.position, 
+                                   transform.forward, 5, LayerMask.GetMask("Wall"));
+    }
+
+    void FixedUpdate() {
+        FreezeRotation();
+        StopToWall();
     }
 
     // 바닥에 착지하는 순간
