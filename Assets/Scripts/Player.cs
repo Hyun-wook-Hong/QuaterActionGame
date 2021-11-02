@@ -12,6 +12,7 @@ public class Player : MonoBehaviour
     // 수류탄: 필살기 - 공전물체로 보여주기 위해 배열 생성
     public GameObject[] grenades;
     public int hasGrenades;
+    public GameObject grenadeObj;
     public Camera followCamera;
 
     /* 현재 총알, 코인, 체력, 수류탄 보유갯수 */
@@ -31,6 +32,7 @@ public class Player : MonoBehaviour
     bool wDown;
     bool jDown;
     bool fDown;
+    bool gDown;
     bool rDown;
     bool iDown;
 
@@ -77,6 +79,8 @@ public class Player : MonoBehaviour
         Turn();
         // 점프기능
         Jump();
+        // 수류탄 투척
+        Grenades();
         // 공격 (L마우스)
         Attack();
         // 원거리 무기 재장전
@@ -94,6 +98,7 @@ public class Player : MonoBehaviour
         wDown  = Input.GetButton("Walk");
         jDown  = Input.GetButtonDown("Jump");
         fDown  = Input.GetButton("Fire1");
+        gDown  = Input.GetButtonDown("Fire2");
         rDown  = Input.GetButtonDown("Reload");
         iDown  = Input.GetButtonDown("Interaction");
         sDown1 = Input.GetButtonDown("Swap1");
@@ -148,6 +153,29 @@ public class Player : MonoBehaviour
             anim.SetBool("isJump", true);
             anim.SetTrigger("doJump");
             isJump = true;
+        }
+    }
+
+    void Grenades(){
+        if(hasGrenades == 0)
+            return;
+        if(gDown && !isReload && !isSwap){
+        Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
+        RaycastHit rayHit;
+        // out: return처럼 반환값을 주어진 변수에 저장하는 키워드
+        if(Physics.Raycast(ray, out rayHit, 100))
+            {
+                Vector3 nextVec = rayHit.point - transform.position;
+                nextVec.y = 10;
+
+                GameObject instantGrenade = Instantiate(grenadeObj, transform.position, transform.rotation);
+                Rigidbody rigidGrenade = instantGrenade.GetComponent<Rigidbody>();
+                rigidGrenade.AddForce(nextVec, ForceMode.Impulse);
+                rigidGrenade.AddTorque(Vector3.back * 10, ForceMode.Impulse);
+
+                hasGrenades--;
+                grenades[hasGrenades].SetActive(false);
+            }
         }
     }
     void Attack(){
