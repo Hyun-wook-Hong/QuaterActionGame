@@ -47,6 +47,7 @@ public class Player : MonoBehaviour
     bool isReload;
     bool isFireReady = true;
     bool isBorder;
+    bool isDamage;
 
     Rigidbody rigid;
     Vector3 moveVec;
@@ -54,6 +55,7 @@ public class Player : MonoBehaviour
 
 
     Animator anim;
+    MeshRenderer[] meshes;
 
     GameObject nearObject;
     Weapon equipWeapon;
@@ -66,6 +68,7 @@ public class Player : MonoBehaviour
     {
         rigid = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
+        meshes = GetComponentsInChildren<MeshRenderer>();
     }
 
     // Update is called once per frame
@@ -347,6 +350,33 @@ public class Player : MonoBehaviour
             }
             Destroy(other.gameObject);
         }
+        // 플레이어 피격 로직
+        else if(other.tag == "EnemyBullet"){
+            if(!isDamage){
+                Bullet enemyBullet = other.GetComponent<Bullet>();
+                health -= enemyBullet.damage;
+                if(other.GetComponent<Rigidbody>() != null)
+                    Destroy(other.gameObject);
+                StartCoroutine(OnDamage());   
+            }
+        }
+    }
+
+    // 플레이어 피격 코루틴
+    IEnumerator OnDamage(){
+        isDamage = true;
+        // 플레이어의 Mesh Object를 전부 가져와서 피격 시 노란색으로 색깔을 바꿈
+        foreach(MeshRenderer mesh in meshes){
+            mesh.material.color = Color.yellow;
+        }
+
+        yield return new WaitForSeconds(1f);
+
+        isDamage = false;
+        // 피격시 일시 무적 상태가 풀리면 원래대로
+        foreach(MeshRenderer mesh in meshes){
+            mesh.material.color = Color.white;
+        }        
     }
 
     // 무기 아이템 입수, 입수 시 필드에 있는 아이템 오브젝트 없애기
