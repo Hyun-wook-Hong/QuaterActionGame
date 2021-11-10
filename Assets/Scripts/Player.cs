@@ -355,20 +355,27 @@ public class Player : MonoBehaviour
             if(!isDamage){
                 Bullet enemyBullet = other.GetComponent<Bullet>();
                 health -= enemyBullet.damage;
-                if(other.GetComponent<Rigidbody>() != null)
-                    Destroy(other.gameObject);
-                StartCoroutine(OnDamage());   
+
+                bool isBossAtk = other.name == "Boss Melee Area";
+
+                StartCoroutine(OnDamage(isBossAtk));   
             }
+            // 무적 타임과 상관없이 총알, 미사일 오브젝트는 피격시 사라지도록 수정
+            if(other.GetComponent<Rigidbody>() != null)
+                Destroy(other.gameObject);
         }
     }
 
     // 플레이어 피격 코루틴
-    IEnumerator OnDamage(){
+    IEnumerator OnDamage(bool isBossAtk){
         isDamage = true;
         // 플레이어의 Mesh Object를 전부 가져와서 피격 시 노란색으로 색깔을 바꿈
         foreach(MeshRenderer mesh in meshes){
             mesh.material.color = Color.yellow;
         }
+
+        if(isBossAtk)
+            rigid.AddForce(transform.forward * (-25), ForceMode.Impulse);
 
         yield return new WaitForSeconds(1f);
 
@@ -376,7 +383,9 @@ public class Player : MonoBehaviour
         // 피격시 일시 무적 상태가 풀리면 원래대로
         foreach(MeshRenderer mesh in meshes){
             mesh.material.color = Color.white;
-        }        
+        }
+        if(isBossAtk)
+            rigid.velocity = Vector3.zero;        
     }
 
     // 무기 아이템 입수, 입수 시 필드에 있는 아이템 오브젝트 없애기
