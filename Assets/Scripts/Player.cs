@@ -48,6 +48,7 @@ public class Player : MonoBehaviour
     bool isFireReady = true;
     bool isBorder;
     bool isDamage;
+    bool isShop;
 
     Rigidbody rigid;
     Vector3 moveVec;
@@ -187,7 +188,7 @@ public class Player : MonoBehaviour
         fireDelay += Time.deltaTime;
         isFireReady = equipWeapon.speedOfAttack < fireDelay;
 
-        if(fDown && isFireReady && !isDodge && !isSwap){
+        if(fDown && isFireReady && !isDodge && !isSwap && !isShop){
             equipWeapon.Use();
             anim.SetTrigger(equipWeapon.type == Weapon.Type.Melee ? "doSwing" : "doShot");
             fireDelay = 0;
@@ -202,7 +203,7 @@ public class Player : MonoBehaviour
         if (ammo == 0)
             return;
 
-        if(rDown && !isJump && !isDodge && !isSwap && isFireReady)
+        if(rDown && !isJump && !isDodge && !isSwap && isFireReady && !isShop)
         {
             anim.SetTrigger("doReload");
             isReload = true;
@@ -279,12 +280,19 @@ public class Player : MonoBehaviour
 
     void Interaction(){
         if(iDown && nearObject != null && !isJump && !isDodge){
-            if(nearObject.tag == "Weapon"){
+            if(nearObject.tag == "Weapon")
+            {
                 Item item = nearObject.GetComponent<Item>();
                 int weaponIndex = item.value;
                 hasWeapons[weaponIndex] = true;
 
                 Destroy(nearObject);
+            }
+            else if(nearObject.tag == "Shop")
+            {
+                Shop shop = nearObject.GetComponent<Shop>();
+                shop.Enter(this);
+                isShop = true;
             }
         }
 
@@ -390,13 +398,19 @@ public class Player : MonoBehaviour
 
     // 무기 아이템 입수, 입수 시 필드에 있는 아이템 오브젝트 없애기
     void OnTriggerStay(Collider other) {
-        if(other.tag == "Weapon")
+        if(other.tag == "Weapon" || other.tag == "Shop")
             nearObject = other.gameObject;
         
         //Debug.Log(nearObject);
     }
     void OnTriggerExit(Collider other) {
         if(other.tag == "Weapon"){
+            nearObject = null;
+        }
+        else if(other.tag == "Shop"){
+            Shop shop = nearObject.GetComponent<Shop>();
+            shop.Exit();
+            isShop = false;
             nearObject = null;
         }
     }
