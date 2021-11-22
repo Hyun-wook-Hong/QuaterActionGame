@@ -109,6 +109,7 @@ public class Boss : Enemy
         nav.isStopped = false;
         boxCollider.enabled = false;
         anim.SetTrigger("doTaunt");
+        
         yield return new WaitForSeconds(1.5f);
         meleeArea.enabled = true;
 

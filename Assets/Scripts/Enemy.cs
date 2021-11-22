@@ -10,9 +10,12 @@ public class Enemy : MonoBehaviour
     // Start is called before the first frame update
    public int maxHealth;
    public int curHealth;
+   public int score;
+   public GameManager manager;
    public Transform target;
    public BoxCollider meleeArea;
    public GameObject bullet;
+   public GameObject[] coins;
    public bool isChase;
    public bool isAttack;
    public bool isDead;
@@ -172,11 +175,12 @@ public class Enemy : MonoBehaviour
        yield return new WaitForSeconds(0.1f);
 
        // HP가 아직 남아있다면
-       if(curHealth > 0){
+       if(curHealth > 0 && !isDead){
            //mat.color = Color.red;
            foreach(MeshRenderer mesh in meshes){
             mesh.material.color = Color.red;
            }
+           yield return new WaitForSeconds(0.1f);
        }
        // 죽었다면
        else{
@@ -189,7 +193,26 @@ public class Enemy : MonoBehaviour
            isChase = false;
            nav.enabled = false;
            anim.SetTrigger("doDie");
-
+           Player player = target.GetComponent<Player>();
+           player.score += score;
+           int ranCoin = Random.Range(0, 3);
+           Instantiate(coins[ranCoin], transform.position, Quaternion.identity);
+        
+           // 몬스터 사망 시 Manager class의 enemyCnt 갱신
+           switch(enemyType){
+               case Type.A:
+                manager.enemyCntA--;
+                break;
+               case Type.B:
+                manager.enemyCntB--;
+                break;
+               case Type.C:
+                manager.enemyCntC--;
+                break;
+               case Type.D:
+                manager.enemyCntD--;
+                break;
+           }
 
            // 수류탄일경우 좀 더 사망 액션 크게
            if(isGrenade){
@@ -206,8 +229,8 @@ public class Enemy : MonoBehaviour
                 reactVec += Vector3.up;
                 rigid.AddForce(reactVec * 5, ForceMode.Impulse);              
            }
-           if(enemyType != Type.D)
-                Destroy(gameObject, 4);
+
+            Destroy(gameObject, 4);
        }
    }
 }
